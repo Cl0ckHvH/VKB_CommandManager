@@ -1,0 +1,36 @@
+{
+  "name": "VKB_Editmessage",
+  "description": "Message editor by command for VK on Python",
+  "stack": "heroku-22",
+  "repository": "https://github.com/Cl0ckHvH/VKB_Editmessage",  
+  "env": {
+    "token": {
+      "description": "Токен пользователя" 
+    },
+	"from_id": {
+      "description": "От кого будет отправляться команда",
+	  "value": "666"
+    },
+	"command": {
+      "description": "Команда для вызова",
+	  "value": "start"
+    },
+	"attachment": {
+      "description": "Прикрепляющий материал" 
+    },
+	"message": {
+      "description": "Текст сообщения" 
+    },
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}
