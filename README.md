@@ -33,6 +33,9 @@ pip install -r requirements.txt --upgrade
 4. Откройте файл `config.toml` любым текстовым редактором и настройте бота под себя
 5. Для запуска введите в командную строку `bot.py`
 
-### Если у вас Windows 7
+## Полезные ссылки
 
-Поддержка Python на Windows 7 прекратилась, начиная с версии 3.9, но всё таки нашёлся человек, который сделал поддержку для Windows 7. Скачать можно [тут](https://github.com/NulAsh/cpython/releases/tag/v3.10.1win7-1)
+[Python 3.10.1 для Windows 7](https://github.com/NulAsh/cpython/releases/tag/v3.10.1win7-1)<br>
+[VK Spambot](https://github.com/Cl0ckHvH/VKB_Spambot)<br>
+[VK Always stay in conversation](https://github.com/Cl0ckHvH/VKB_AlwaysInConversation)<br>
+[Моя группа ВК](https://vk.com/kings_of_conversation)
