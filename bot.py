@@ -36,6 +36,14 @@ async def edit_message(message: Message):
         message_id=message.id
     )
 
+@user.on.message(from_id = int(config["from_id"]), command = "gus")
+async def gus(message: Message):
+    await user.api.messages.edit(
+        peer_id=message.peer_id,
+        attachment="doc514714577_640721672",
+        message_id=message.id
+    )
+
 if __name__ == "__main__":
     user.loop_wrapper.auto_reload = True
     user.run_forever()
