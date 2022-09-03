@@ -1,6 +1,7 @@
 import asyncio
 import toml
 import os
+import requests
 from typing import Union
 
 from vkbottle import API, user
@@ -51,11 +52,33 @@ async def edit_message(message: Message):
         message_id=message.id
     )
 
-@user.on.message(from_id = int(config["from_id"]), command = "gus")
+@user.on.message(from_id = from_id_list, command = "gus")
 async def gus(message: Message):
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
         attachment="doc514714577_640721672",
+        message_id=message.id
+    )
+
+@user.on.message(from_id = from_id_list, command = "get_id")
+async def get_id_list(message: Message):
+    null = 0
+    false = 0
+    true = 1
+    upload_server = str(await message.ctx_api.docs.get_upload_server())[12:]
+    temp_id = eval(str(dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id))['preview'].json()))['members']
+    file = open('id_list.txt', 'w')
+    for counter in range(0, len(temp_id)):
+        if(temp_id[counter] > 0):
+            file.write('@id' + str(temp_id[counter]) + ', ')
+        else:
+            file.write('@club' + str(temp_id[counter] * (-1)) + ', ')
+    file.close()
+    request = requests.post(upload_server, files = {'file':open('id_list.txt', 'rb')})
+    uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title='id_list')).json()))
+    await message.ctx_api.messages.edit(
+        peer_id=message.peer_id,
+        attachment='doc' + str(uploaded_document['doc']['owner_id']) + '_' + str(uploaded_document['doc']['id']),
         message_id=message.id
     )
 
@@ -75,5 +98,5 @@ if __name__ == "__main__":
     apies = []
     setup = asyncio.get_event_loop()
     setup.run_until_complete(set_apis_from_config(apies))
-    user.loop_wrapper.auto_reload = True
+    # user.loop_wrapper.auto_reload = True
     run_multibot(user, apis=apies)
