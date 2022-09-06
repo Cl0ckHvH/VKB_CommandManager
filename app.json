@@ -7,10 +7,6 @@
     "token": {
       "description": "Токен пользователя" 
     },
-	"from_id": {
-      "description": "От кого будет отправляться команда",
-	  "value": "666"
-    },
 	"command": {
       "description": "Команда для вызова",
 	  "value": "start"
@@ -18,7 +14,7 @@
 	"attachment": {
       "description": "Прикрепляющий материал" 
     },
-	"message": {
+	"text": {
       "description": "Текст сообщения" 
     }
   },
