@@ -65,20 +65,26 @@ async def set_id_from_token(message: Message, null: int = 0, false: int = 0, tru
         await asyncio.sleep(1.0)
         file.close
         set_id_counter = 1
-        await message.ctx_api.messages.edit(peer_id=message.peer_id, message="ID-шники успешно установленны, всего их: " + str(len(from_id_list)),
-        message_id=message.id)
+        await message.ctx_api.messages.edit(peer_id=message.peer_id, message="ID-шники успешно установленны, всего их: " + str(len(from_id_list)), message_id=message.id)
 
 ################ Всё что выше - первоначальная настройка ############################################################
 
 # Редактирует сообщение на то, что задал пользователь в конфиге
 @user.on.message(from_id = from_id_list, command = config["command"])
 async def edit_message(message: Message):
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message=config["text"],
-        attachment=config["attachment"],
-        message_id=message.id
-    )
+    try:
+        await message.ctx_api.messages.edit(
+            peer_id=message.peer_id,
+            message=config["text"],
+            attachment=config["attachment"],
+            message_id=message.id
+        )
+    except VKAPIError[100]:
+        await message.ctx_api.messages.edit(
+            peer_id=message.peer_id,
+            message="ᅠ",
+            message_id=message.id
+        )
 
 # Редактирует сообщение на гифку buff gus
 @user.on.message(from_id = from_id_list, command = "gus")
@@ -143,6 +149,15 @@ async def get_group_id_list(message: Message):
 @user.on.message(from_id = from_id_list, command = "restart")
 async def restart_application(message: Message):
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+
+# Отображает список команд
+@user.on.message(from_id = from_id_list, command = "help")
+async def show_help(message: Message):
+    await message.ctx_api.messages.edit(
+        peer_id=message.peer_id,
+        message="Команды для вызова функционала:\n\n/" + config["command"] + " (кастомная команда) - редактирует сообщение на то, что Вы задали в конфиге\n/gus - редактирует сообщение на гифку buff gus\n/get_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе\n/get_member_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей в беседе\n/get_group_id - редактирует сообщение на txt файл, в котором находится список всех ID групп в беседе\n/restart - перезапускает бота\n\nКоманды для редактирования кастомного функционала:\n\n/attachment remove - удаляет кастомное вложение\n/attachment edit <value> - устанавливает кастомное вложение на <value>\n/text remove - удаляет кастомный текст\n/text edit <value> - устанавливает кастомный текст на <value>\n/command edit <value> - устанавливает кастомную команду для вызова на <value>",
+        message_id=message.id
+    )
 
 ################ Команды для настройки конфига ######################################################################
 
@@ -216,6 +231,7 @@ async def command_edit(message: Message, args: Tuple[str]):
         message="Готово, кастомная команда была изменена на: " + config["command"],
         message_id=message.id
     )
+    await restart_application(message)
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
 def set_apis_from_config(apies):
