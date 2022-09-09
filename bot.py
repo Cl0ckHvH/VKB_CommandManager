@@ -95,10 +95,6 @@ async def gus(message: Message):
         message_id=message.id
     )
 
-# Получает список пользователей и групп в беседе
-async def get_id_from_chat(message, null: int = 0, false: int = 0, true: int = 1):
-    return eval(str(dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id))['preview'].json()))['members']
-
 # Опубликовывает файл на сервер и редактирует сообщение в файл
 async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0, true: int = 1):
     upload_server = str(await message.ctx_api.docs.get_upload_server())[12:]
@@ -111,37 +107,40 @@ async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0
     )
 
 # Редактирует сообщение на txt файл, в котором находится список всех пользователей и групп в беседе
-@user.on.chat_message(from_id = from_id_list, command = "get_id")
-async def get_id_list(message: Message):
-    temp_id = await get_id_from_chat(message)
-    file = open('id_list.txt', 'w')
-    for counter in range(0, len(temp_id)):
-        if(temp_id[counter] > 0):
-            file.write('@id' + str(temp_id[counter]) + ', ')
-        else:
-            file.write('@club' + str(temp_id[counter] * (-1)) + ', ')
-    file.close()
-    await upload_and_edit_message_in_file(message)
-
-# Редактирует сообщение на txt файл, в котором находится список всех пользователей в беседе
-@user.on.chat_message(from_id = from_id_list, command = "get_member_id")
-async def get_member_id_list(message: Message):
-    temp_id = await get_id_from_chat(message)
-    file = open('id_list.txt', 'w')
+@user.on.chat_message(from_id = from_id_list, command = "get id")
+async def get_id_list(message: Message, null: int = 0, false: int = 0, true: int = 1):
+    temp_id = eval(str(dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id))['preview'].json()))['members']
+    member_id = []
+    group_id = []
     for counter in range(0, len(temp_id)):
         if (temp_id[counter] > 0):
-            file.write('@id' + str(temp_id[counter]) + ', ')
-    file.close()
-    await upload_and_edit_message_in_file(message)
-
-# Редактирует сообщение на txt файл, в котором находится список всех групп в беседе
-@user.on.chat_message(from_id = from_id_list, command = "get_group_id")
-async def get_group_id_list(message: Message):
-    temp_id = await get_id_from_chat(message)
-    file = open('id_list.txt', 'w')
-    for counter in range(0, len(temp_id)):
-        if(temp_id[counter] < 0):
-            file.write('@club' + str(temp_id[counter] * (-1)) + ', ')
+            member_id.append(temp_id[counter])
+        else:
+            group_id.append(temp_id[counter])
+    file = open('id_list.txt', 'w', encoding='utf-8')
+    file.write("Member IDs:\n")
+    for counter in range(0, len(member_id)):
+        file.write(str(member_id[counter]) + ", ")
+    file.write("\n\nGroup IDs:\n")
+    for counter in range(0, len(group_id)):
+        file.write(str(group_id[counter]) + ", ")
+    file.write("\n\nCallable member IDs:\n")
+    for counter in range(0, len(member_id)):
+        file.write("@id" + str(member_id[counter]) + ", ")
+    file.write("\n\nCallable group IDs:\n")
+    for counter in range(0, len(group_id)):
+        file.write("@club" + str(group_id[counter] * (-1)) + ", ")
+    file.write("\n\nName and Surname + (member ID):\n")
+    temp_member_names = await message.ctx_api.users.get(user_ids=member_id)
+    temp_group_names = []
+    for counter in range(0, len(group_id)):
+        temp_group_names.append(group_id[counter] * (-1))
+    temp_group_names = await message.ctx_api.groups.get_by_id(group_ids=temp_group_names)
+    for counter in range(0, len(temp_member_names)):
+        file.write(str(eval(temp_member_names[counter].json())['first_name']) + ' ' + str(eval(temp_member_names[counter].json())['last_name']) + ' (' + str(eval(temp_member_names[counter].json())['id']) + '), ')
+    file.write("\n\nName + (group ID):\n")
+    for counter in range(0, len(temp_group_names)):
+        file.write(str(eval(temp_group_names[counter].json())['name']) + ' (' + str(group_id[counter]) + '), ')
     file.close()
     await upload_and_edit_message_in_file(message)
 
@@ -155,7 +154,7 @@ async def restart_application(message: Message):
 async def show_help(message: Message):
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
-        message="Команды для вызова функционала:\n\n/" + config["command"] + " (кастомная команда) - редактирует сообщение на то, что Вы задали в конфиге\n/gus - редактирует сообщение на гифку buff gus\n/get_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе\n/get_member_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей в беседе\n/get_group_id - редактирует сообщение на txt файл, в котором находится список всех ID групп в беседе\n/restart - перезапускает бота\n\nКоманды для редактирования кастомного функционала:\n\n/attachment remove - удаляет кастомное вложение\n/attachment edit <value> - устанавливает кастомное вложение на <value>\n/text remove - удаляет кастомный текст\n/text edit <value> - устанавливает кастомный текст на <value>\n/command edit <value> - устанавливает кастомную команду для вызова на <value>",
+        message="Команды для вызова функционала:\n\n/" + config["command"] + " (кастомная команда) - редактирует сообщение на то, что Вы задали в конфиге\n/gus - редактирует сообщение на гифку buff gus\n/get_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе\n/restart - перезапускает бота\n\nКоманды для редактирования кастомного функционала:\n\n/attachment remove - удаляет кастомное вложение\n/attachment edit <value> - устанавливает кастомное вложение на <value>\n/text remove - удаляет кастомный текст\n/text edit <value> - устанавливает кастомный текст на <value>\n/command edit <value> - устанавливает кастомную команду для вызова на <value>",
         message_id=message.id
     )
 
