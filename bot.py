@@ -97,52 +97,64 @@ async def gus(message: Message):
 
 # Опубликовывает файл на сервер и редактирует сообщение в файл
 async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0, true: int = 1):
-    upload_server = str(await message.ctx_api.docs.get_upload_server())[12:]
-    request = requests.post(upload_server, files={'file': open('id_list.txt', 'rb')})
-    uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title='id_list')).json()))
+    upload_server = dict(await message.ctx_api.docs.get_upload_server())["upload_url"]
+    request = requests.post(upload_server, files={'file': open('chat_info.txt', 'rb')})
+    uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title='chat_info')).json()))
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
         attachment='doc' + str(uploaded_document['doc']['owner_id']) + '_' + str(uploaded_document['doc']['id']),
         message_id=message.id
     )
 
-# Редактирует сообщение на txt файл, в котором находится список всех пользователей и групп в беседе
-@user.on.chat_message(from_id = from_id_list, command = "get id")
-async def get_id_list(message: Message, null: int = 0, false: int = 0, true: int = 1):
-    temp_id = eval(str(dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id))['preview'].json()))['members']
-    member_id = []
-    group_id = []
-    for counter in range(0, len(temp_id)):
-        if (temp_id[counter] > 0):
-            member_id.append(temp_id[counter])
+# Записывает инфу о чате в файл
+async def write_in_file_conversation_info(message, t_info, null: int = 0, false: int = 0, true: int = 1):
+    file = open("chat_info.txt", "w", encoding="utf-8")
+    t_all_member_ids = eval(t_info["preview"].json())["members"]
+    t_member_ids = []
+    t_group_ids = []
+    for counter in range(0, len(t_all_member_ids)):
+        if t_all_member_ids[counter] > 0:
+            t_member_ids.append(t_all_member_ids[counter])
         else:
-            group_id.append(temp_id[counter])
-    file = open('id_list.txt', 'w', encoding='utf-8')
-    file.write("Member IDs:\n")
-    for counter in range(0, len(member_id)):
-        file.write(str(member_id[counter]) + ", ")
-    file.write("\n\nGroup IDs:\n")
-    for counter in range(0, len(group_id)):
-        file.write(str(group_id[counter]) + ", ")
-    file.write("\n\nCallable member IDs:\n")
-    for counter in range(0, len(member_id)):
-        file.write("@id" + str(member_id[counter]) + ", ")
-    file.write("\n\nCallable group IDs:\n")
-    for counter in range(0, len(group_id)):
-        file.write("@club" + str(group_id[counter] * (-1)) + ", ")
-    file.write("\n\nName and Surname + (member ID):\n")
-    temp_member_names = await message.ctx_api.users.get(user_ids=member_id)
-    temp_group_names = []
-    for counter in range(0, len(group_id)):
-        temp_group_names.append(group_id[counter] * (-1))
-    temp_group_names = await message.ctx_api.groups.get_by_id(group_ids=temp_group_names)
-    for counter in range(0, len(temp_member_names)):
-        file.write(str(eval(temp_member_names[counter].json())['first_name']) + ' ' + str(eval(temp_member_names[counter].json())['last_name']) + ' (' + str(eval(temp_member_names[counter].json())['id']) + '), ')
-    file.write("\n\nName + (group ID):\n")
-    for counter in range(0, len(temp_group_names)):
-        file.write(str(eval(temp_group_names[counter].json())['name']) + ' (' + str(group_id[counter]) + '), ')
+            t_group_ids.append(t_all_member_ids[counter] * (-1))
+    file.write(str("Название беседы: " + str(eval(t_info["preview"].json())["title"]) + "\n\nID админа: " + str(
+        eval(t_info["preview"].json())["admin_id"]) + "\n\nКоличество всех участников: " + str(
+        eval(t_info["preview"].json())["members_count"]) + "\n\nКоличество людей: " + str(
+        len(t_member_ids)) + "\n\nКоличество сообществ: " + str(len(t_group_ids)) + "\n\nID пользователей: "))
+    for counter in range(0, len(t_member_ids)):
+        file.write(str(t_member_ids[counter]) + ", ")
+    file.write("\n\nID сообществ: ")
+    for counter in range(0, len(t_group_ids)):
+        file.write(str(t_group_ids[counter] * (-1)) + ", ")
+    file.write("\n\nВызываемые ID пользователей: ")
+    for counter in range(0, len(t_member_ids)):
+        file.write("@id" + str(t_member_ids[counter]) + ", ")
+    file.write("\n\nВызываемые ID сообществ: ")
+    for counter in range(0, len(t_group_ids)):
+        file.write("@club" + str(t_group_ids[counter]) + ", ")
+    file.write("\n\nИмя и фамилия + (ID пользователя): ")
+    t_member_names = await message.ctx_api.users.get(user_ids=t_member_ids)
+    for counter in range(0, len(t_member_names)):
+        file.write(str(eval(t_member_names[counter].json())['first_name']) + " " + str(
+            eval(t_member_names[counter].json())['last_name']) + " (" + str(
+            eval(t_member_names[counter].json())['id']) + "), ")
+    file.write("\n\nНазвание + (ID сообщества): ")
+    t_group_names = await message.ctx_api.groups.get_by_id(group_ids=t_group_ids)
+    for counter in range(0, len(t_group_names)):
+        file.write(str(eval(t_group_names[counter].json())['name']) + " (" + str(
+            eval(t_group_names[counter].json())['id'] * (-1)) + "), ")
     file.close()
     await upload_and_edit_message_in_file(message)
+
+# Редактирует сообщение на txt файл, в котором находится инфа о беседе
+@user.on.chat_message(from_id = from_id_list, command = "get info")
+async def get_chat_info(message: Message, null: int = 0, false: int = 0, true: int = 1):
+    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)))
+
+# Редактирует сообщение на txt файл, в котором находится инфа о беседе с ссылки
+@user.on.message(from_id = from_id_list, command = ("get info", 1))
+async def get_chat_info_by_link(message: Message, args: Tuple[str], none: int = 0, true: int = 1, null: int = 0, false: int = 0):
+    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(link=args[0])))
 
 # Перезапускает бота
 @user.on.message(from_id = from_id_list, command = "restart")
