@@ -105,6 +105,7 @@ async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0
         attachment='doc' + str(uploaded_document['doc']['owner_id']) + '_' + str(uploaded_document['doc']['id']),
         message_id=message.id
     )
+    await message.ctx_api.docs.delete(owner_id=uploaded_document['doc']['owner_id'], doc_id=uploaded_document['doc']['id'])
 
 # Записывает инфу о чате в файл
 async def write_in_file_conversation_info(message, t_info, null: int = 0, false: int = 0, true: int = 1):
@@ -201,6 +202,8 @@ async def attachment_remove(message: Message):
         message="Кастомное вложение было удалено",
         message_id=message.id
     )
+    await asyncio.sleep(1.0)
+    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
 
 # Изменяет вложение на любое из конфига
 @user.on.message(from_id = from_id_list, command = ("attachment edit", 1))
@@ -212,6 +215,8 @@ async def attachment_edit(message: Message, args: Tuple[str]):
         attachment=args[0],
         message_id=message.id
     )
+    await asyncio.sleep(1.0)
+    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
 
 # Удаляет текст из конфига
 @user.on.message(from_id = from_id_list, command = "text remove")
@@ -222,6 +227,8 @@ async def text_remove(message: Message):
         message="Кастомный текст был удалён",
         message_id=message.id
     )
+    await asyncio.sleep(1.0)
+    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
 
 # Изменяет текст на любое из конфига
 @user.on.message(from_id = from_id_list, command = ("text edit", 1))
@@ -232,6 +239,8 @@ async def text_edit(message: Message, args: Tuple[str]):
         message="Готово, кастомный текст был изменён на: " + config["text"],
         message_id=message.id
     )
+    await asyncio.sleep(1.0)
+    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
 
 # Изменяет команду вызова из конфига
 @user.on.message(from_id = from_id_list, command = ("command edit", 1))
@@ -242,6 +251,8 @@ async def command_edit(message: Message, args: Tuple[str]):
         message="Готово, кастомная команда была изменена на: " + config["command"],
         message_id=message.id
     )
+    await asyncio.sleep(1.0)
+    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
     await restart_application(message)
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
