@@ -104,6 +104,7 @@ async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0
         message_id=message.id
     )
     await message.ctx_api.docs.delete(owner_id=uploaded_document['doc']['owner_id'], doc_id=uploaded_document['doc']['id'])
+    os.remove("chat_info.txt")
 
 # Записывает инфу о чате в файл
 async def write_in_file_conversation_info(message, t_info, null: int = 0, false: int = 0, true: int = 1):
