@@ -21,6 +21,9 @@ with open("config.toml", "r", encoding="utf-8") as f:
     else:
         config = toml.load(f)
 
+with open("config_text.toml", "r", encoding="utf-8") as f:
+    config_text = toml.load(f)
+
 user = User()
 
 # Кастомный рулз, который позволяет вызывать команды только определённым пользователям, которые прописаны в списке
@@ -67,16 +70,20 @@ async def set_id_from_token(message: Message, null: int = 0, false: int = 0, tru
         set_id_counter = 1
         await message.ctx_api.messages.edit(peer_id=message.peer_id, message="ID-шники успешно установленны, всего их: " + str(len(from_id_list)), message_id=message.id)
 
+command_list = []
+for i in config_text:
+    command_list.append("/" + i)
+
 ################ Всё что выше - первоначальная настройка ############################################################
 
 # Редактирует сообщение на то, что задал пользователь в конфиге
-@user.on.message(from_id = from_id_list, command = config["command"])
+@user.on.message(from_id = from_id_list, text = command_list)
 async def edit_message(message: Message):
     try:
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
-            message=config["text"],
-            attachment=config["attachment"],
+            message=config_text[message.text[1:]]["text"],
+            attachment=config_text[message.text[1:]]["attachment"],
             message_id=message.id
         )
     except VKAPIError[100]:
@@ -85,15 +92,6 @@ async def edit_message(message: Message):
             message="ᅠ",
             message_id=message.id
         )
-
-# Редактирует сообщение на гифку buff gus
-@user.on.message(from_id = from_id_list, command = "gus")
-async def gus(message: Message):
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        attachment="doc514714577_640721672",
-        message_id=message.id
-    )
 
 # Опубликовывает файл на сервер и редактирует сообщение в файл
 async def upload_and_edit_message_in_file(message, null: int = 0, false: int = 0, true: int = 1):
@@ -171,7 +169,7 @@ async def show_help(message: Message):
         message_id=message.id
     )
 
-################ Команды для настройки конфига ######################################################################
+################ Функции для настройки конфига ######################################################################
 
 # Функция для удаление любого параметра переменной из конфига
 async def config_remove_item(parameter):
@@ -192,68 +190,6 @@ async def config_edit_item(parameter, args):
     with open("config.toml", "w", encoding="utf-8") as f:
         f.write(temp_config)
     config[parameter] = args
-
-# Удаляет вложение из конфига
-@user.on.message(from_id = from_id_list, command = "attachment remove")
-async def attachment_remove(message: Message):
-    await config_remove_item("attachment")
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message="Кастомное вложение было удалено",
-        message_id=message.id
-    )
-    await asyncio.sleep(1.0)
-    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
-
-# Изменяет вложение на любое из конфига
-@user.on.message(from_id = from_id_list, command = ("attachment edit", 1))
-async def attachment_edit(message: Message, args: Tuple[str]):
-    await config_edit_item("attachment", args[0])
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message="Готово, кастомное вложение было изменено на:",
-        attachment=args[0],
-        message_id=message.id
-    )
-    await asyncio.sleep(1.0)
-    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
-
-# Удаляет текст из конфига
-@user.on.message(from_id = from_id_list, command = "text remove")
-async def text_remove(message: Message):
-    await config_remove_item("text")
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message="Кастомный текст был удалён",
-        message_id=message.id
-    )
-    await asyncio.sleep(1.0)
-    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
-
-# Изменяет текст на любое из конфига
-@user.on.message(from_id = from_id_list, command = ("text edit", 1))
-async def text_edit(message: Message, args: Tuple[str]):
-    await config_edit_item("text", args[0])
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message="Готово, кастомный текст был изменён на: " + config["text"],
-        message_id=message.id
-    )
-    await asyncio.sleep(1.0)
-    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
-
-# Изменяет команду вызова из конфига
-@user.on.message(from_id = from_id_list, command = ("command edit", 1))
-async def command_edit(message: Message, args: Tuple[str]):
-    await config_edit_item("command", args[0])
-    await message.ctx_api.messages.edit(
-        peer_id=message.peer_id,
-        message="Готово, кастомная команда была изменена на: " + config["command"],
-        message_id=message.id
-    )
-    await asyncio.sleep(1.0)
-    await message.ctx_api.messages.delete(message_ids=message.id, delete_for_all=1)
-    await restart_application(message)
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
 def set_apis_from_config(apies):
