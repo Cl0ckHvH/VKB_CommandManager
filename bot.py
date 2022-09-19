@@ -36,41 +36,9 @@ class FromIdRule(ABCRule[BaseMessageMin]):
 
 user.labeler.custom_rules["from_id"] = FromIdRule
 
-# Настраивает from_id, беря его из файла
-def from_id_list_from_config(from_id_list):
-    temp_id = ""
-    file = open('from_id_list.txt', 'r')
-    file = file.read()
-    for letter in file:
-        if letter == ',' and letter != ' ':
-            from_id_list.append(int(temp_id))
-            temp_id = ""
-        elif letter != ' ':
-            temp_id += letter
-
 from_id_list = []
-from_id_list_from_config(from_id_list)
-set_id_counter = 0
-
-# Устанавливает from_id по токену
-@user.on.message(command = "set_id")
-async def set_id_from_token(message: Message, null: int = 0, false: int = 0, true: int = 1):
-    global set_id_counter
-    if set_id_counter == 0:
-        from_id_list.clear()
-        file = open('from_id_list.txt', 'w')
-        file.close()
-        await asyncio.sleep(1.0)
-        file = open('from_id_list.txt', 'a')
-        temp_id = eval((await message.ctx_api.users.get(fields='id'))[0].json())['id']
-        from_id_list.append(int(temp_id))
-        file.write(str(temp_id) + ', ')
-        await asyncio.sleep(1.0)
-        file.close
-        set_id_counter = 1
-        await message.ctx_api.messages.edit(peer_id=message.peer_id, message="ID-шники успешно установленны, всего их: " + str(len(from_id_list)), message_id=message.id)
-
 command_list = []
+
 for i in config_text:
     command_list.append("/" + i)
 
@@ -171,7 +139,8 @@ async def show_help(message: Message):
     )
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
-def set_apis_from_config(apies):
+async def set_apis_from_config(apies):
+    global from_id_list
     temp_token = ""
     counter = 0
     for letter_api in config["token"]:
@@ -179,12 +148,15 @@ def set_apis_from_config(apies):
             temp_token += letter_api
         elif letter_api == '\n' and config["token"][counter + 1] != '\n':
             apies.append(API(temp_token))
+            from_id_list.append(int(dict(await User(temp_token).api.account.get_profile_info())['id']))
             temp_token = ""
         counter += 1
     apies.append(API(temp_token))
+    from_id_list.append(int(dict(await User(temp_token).api.account.get_profile_info())['id']))
 
 if __name__ == "__main__":
     apies = []
-    set_apis_from_config(apies)
+    set_token = asyncio.get_event_loop()
+    set_token.run_until_complete(set_apis_from_config(apies))
     # user.loop_wrapper.auto_reload = True
     run_multibot(user, apis=apies)
