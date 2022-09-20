@@ -132,9 +132,13 @@ async def restart_application(message: Message):
 # Отображает список команд
 @user.on.message(from_id = from_id_list, command = "help")
 async def show_help(message: Message):
+    global command_list
+    custom_command_list = ""
+    for i in range(0, len(command_list)):
+        custom_command_list += command_list[i] + "\n"
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
-        message="Команды для вызова функционала:\n\n/" + config["command"] + " (кастомная команда) - редактирует сообщение на то, что Вы задали в конфиге\n/gus - редактирует сообщение на гифку buff gus\n/get_id - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе\n/restart - перезапускает бота\n\nКоманды для редактирования кастомного функционала:\n\n/attachment remove - удаляет кастомное вложение\n/attachment edit <value> - устанавливает кастомное вложение на <value>\n/text remove - удаляет кастомный текст\n/text edit <value> - устанавливает кастомный текст на <value>\n/command edit <value> - устанавливает кастомную команду для вызова на <value>",
+        message="Кастомные команды для вызова функционала:\n\n" + custom_command_list + "\n" + "\nКоманды для вызова функционала:\n\n/get info - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в локальной беседе\n/get info <link> - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе по ссылке приглашения\n/restart - перезапускает бота\n/help - выводит список со всеми командами",
         message_id=message.id
     )
 
