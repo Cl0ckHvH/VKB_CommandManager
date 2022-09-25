@@ -50,6 +50,7 @@ async def edit_message(message: Message):
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
             message=config_text[message.text[1:]]["text"],
+            keep_forward_messages=1,
             attachment=config_text[message.text[1:]]["attachment"],
             message_id=message.id
         )
@@ -57,6 +58,7 @@ async def edit_message(message: Message):
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
             message="ᅠ",
+            keep_forward_messages=1,
             message_id=message.id
         )
 
@@ -68,6 +70,7 @@ async def upload_and_edit_message_in_file(message, file_name, null: int = 0, fal
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
         attachment='doc' + str(uploaded_document['doc']['owner_id']) + '_' + str(uploaded_document['doc']['id']),
+        keep_forward_messages=1,
         message_id=message.id
     )
     await message.ctx_api.docs.delete(owner_id=uploaded_document['doc']['owner_id'], doc_id=uploaded_document['doc']['id'])
@@ -118,7 +121,9 @@ async def get_chat_info_by_link(message: Message, args: Tuple[str], none: int = 
     await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(link=args[0])), "chat_info.txt")
 
 @user.on.message(from_id = from_id_list, text = ("/audio <audio>"))
-async def audio_message(message, audio: Optional[str] = None, null: int = 0, false: int = 0, true: int = 1):
+async def audio_message(message: Message, audio: Optional[str] = None, null: int = 0, false: int = 0, true: int = 1):
+    try: reply_message_id = dict(message.reply_message)['id']
+    except: reply_message_id = None
     try:
         upload_server = dict(await message.ctx_api.docs.get_messages_upload_server(type = "audio_message", peer_id=message.peer_id))["upload_url"]
         request = requests.post(upload_server, files={'file': open(('Audio\\' + audio + '.ogg'), 'rb')})
@@ -161,18 +166,9 @@ async def show_help(message: Message):
 ################ Всё что ниже - настройка запуска и бота ############################################################
 async def set_apis_from_config(apies):
     global from_id_list
-    temp_token = ""
-    counter = 0
-    for letter_api in config["token"]:
-        if letter_api != '\n':
-            temp_token += letter_api
-        elif letter_api == '\n' and config["token"][counter + 1] != '\n':
-            apies.append(API(temp_token))
-            from_id_list.append(int(dict(await User(temp_token).api.account.get_profile_info())['id']))
-            temp_token = ""
-        counter += 1
-    apies.append(API(temp_token))
-    from_id_list.append(int(dict(await User(temp_token).api.account.get_profile_info())['id']))
+    for i in range(0, len(config["token"])):
+        apies.append(API(config["token"][i]))
+        from_id_list.append(int(dict(await User(config["token"][i]).api.account.get_profile_info())['id']))
 
 if __name__ == "__main__":
     apies = []
