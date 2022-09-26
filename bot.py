@@ -131,7 +131,8 @@ async def audio_message(message: Message, audio: Optional[str] = None, null: int
         await message.ctx_api.messages.send(
             random_id = 0,
             peer_id=message.peer_id,
-            attachment='doc' + str(uploaded_document['audio_message']['owner_id']) + '_' + str(uploaded_document['audio_message']['id'])
+            attachment='doc' + str(uploaded_document['audio_message']['owner_id']) + '_' + str(uploaded_document['audio_message']['id']),
+            reply_to=reply_message_id
         )
         await message.ctx_api.docs.delete(owner_id=uploaded_document['audio_message']['owner_id'], doc_id=uploaded_document['audio_message']['id'])
         await message.ctx_api.messages.delete(message_ids = message.id, delete_for_all = 1, peer_id = message.peer_id)
