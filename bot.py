@@ -77,7 +77,7 @@ async def upload_and_edit_message_in_file(message, file_name, null: int = 0, fal
     os.remove(file_name)
 
 # Записывает инфу о чате в файл
-async def write_in_file_conversation_info(message, t_info, file_name, null: int = 0, false: int = 0, true: int = 1):
+async def write_in_file_conversation_info(message, t_info, file_name, t_link, null: int = 0, false: int = 0, true: int = 1):
     file = open(file_name, "w", encoding="utf-8")
     t_all_member_ids = eval(t_info["preview"].json())["members"]
     t_member_ids = []
@@ -87,7 +87,7 @@ async def write_in_file_conversation_info(message, t_info, file_name, null: int 
             t_member_ids.append(t_all_member_ids[counter])
         else:
             t_group_ids.append(t_all_member_ids[counter] * (-1))
-    file.write(str("Название беседы: " + (str(eval(t_info["preview"].json())["title"])).encode('utf-8', 'replace').decode() + "\n\nID админа: " + str(eval(t_info["preview"].json())["admin_id"]) + "\n\nКоличество всех участников: " + str(eval(t_info["preview"].json())["members_count"]) + "\n\nКоличество людей: " + str(len(t_member_ids)) + "\n\nКоличество сообществ: " + str(len(t_group_ids)) + "\n\nID пользователей: "))
+    file.write(str("Название беседы: " + (str(eval(t_info["preview"].json())["title"])).encode('utf-8', 'replace').decode() + "\n\nСсылка на приглашение: " + t_link + "\n\nID админа: " + str(eval(t_info["preview"].json())["admin_id"]) + "\n\nКоличество всех участников: " + str(eval(t_info["preview"].json())["members_count"]) + "\n\nКоличество людей: " + str(len(t_member_ids)) + "\n\nКоличество сообществ: " + str(len(t_group_ids)) + "\n\nID пользователей: "))
     for counter in range(0, len(t_member_ids)):
         file.write(str(t_member_ids[counter]) + ", ")
     file.write("\n\nID сообществ: ")
@@ -113,12 +113,14 @@ async def write_in_file_conversation_info(message, t_info, file_name, null: int 
 # Редактирует сообщение на txt файл, в котором находится инфа о беседе
 @user.on.chat_message(from_id = from_id_list, command = "get info")
 async def get_chat_info(message: Message, null: int = 0, false: int = 0, true: int = 1):
-    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)), "chat_info.txt")
+    try: invite_link = dict(await message.ctx_api.messages.get_invite_link(peer_id=message.peer_id))['link']
+    except: invite_link = "нету"
+    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)), "chat_info.txt", invite_link)
 
 # Редактирует сообщение на txt файл, в котором находится инфа о беседе с ссылки
 @user.on.message(from_id = from_id_list, command = ("get info", 1))
 async def get_chat_info_by_link(message: Message, args: Tuple[str], none: int = 0, true: int = 1, null: int = 0, false: int = 0):
-    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(link=args[0])), "chat_info.txt")
+    await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(link=args[0])), "chat_info.txt", args[0])
 
 @user.on.message(from_id = from_id_list, text = ("/audio <audio>"))
 async def audio_message(message: Message, audio: Optional[str] = None, null: int = 0, false: int = 0, true: int = 1):
@@ -175,5 +177,4 @@ if __name__ == "__main__":
     apies = []
     set_token = asyncio.get_event_loop()
     set_token.run_until_complete(set_apis_from_config(apies))
-    # user.loop_wrapper.auto_reload = True
     run_multibot(user, apis=apies)
