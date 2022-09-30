@@ -1,14 +1,14 @@
-import asyncio
-import toml
 import os
-import requests
 import sys
+import toml
+import asyncio
+import requests
 
 from typing import Union, Tuple, Optional
 
 from vkbottle import API, VKAPIError
-from vkbottle.user import User, Message, run_multibot
 from vkbottle.dispatch.rules import ABCRule
+from vkbottle.user import User, Message, run_multibot
 from vkbottle.tools.dev.mini_types.base import BaseMessageMin
 # Работа с конфигом: чтение из него
 with open("config.toml", "r", encoding="utf-8") as f:
@@ -91,22 +91,28 @@ async def write_in_file_conversation_info(message, t_info, file_name, t_link, nu
     for counter in range(0, len(t_member_ids)):
         file.write(str(t_member_ids[counter]) + ", ")
     file.write("\n\nID сообществ: ")
-    for counter in range(0, len(t_group_ids)):
-        file.write(str(t_group_ids[counter] * (-1)) + ", ")
+    if len(t_group_ids) > 0:
+        for counter in range(0, len(t_group_ids)):
+            file.write(str(t_group_ids[counter] * (-1)) + ", ")
+    else: file.write("нету")
     file.write("\n\nВызываемые ID пользователей: ")
     for counter in range(0, len(t_member_ids)):
         file.write("@id" + str(t_member_ids[counter]) + ", ")
     file.write("\n\nВызываемые ID сообществ: ")
-    for counter in range(0, len(t_group_ids)):
-        file.write("@club" + str(t_group_ids[counter]) + ", ")
+    if len(t_group_ids) > 0:
+        for counter in range(0, len(t_group_ids)):
+            file.write("@club" + str(t_group_ids[counter]) + ", ")
+    else: file.write("нету")
     file.write("\n\nИмя и фамилия + (ID пользователя): ")
     t_member_names = await message.ctx_api.users.get(user_ids=t_member_ids)
     for counter in range(0, len(t_member_names)):
         file.write(str(eval(t_member_names[counter].json())['first_name']) + " " + str(eval(t_member_names[counter].json())['last_name']) + " (" + str(eval(t_member_names[counter].json())['id']) + "), ")
     file.write("\n\nНазвание + (ID сообщества): ")
-    t_group_names = await message.ctx_api.groups.get_by_id(group_ids=t_group_ids)
-    for counter in range(0, len(t_group_names)):
-        file.write(str(eval(t_group_names[counter].json())['name']) + " (" + str(eval(t_group_names[counter].json())['id'] * (-1)) + "), ")
+    if len(t_group_ids) > 0:
+        t_group_names = await message.ctx_api.groups.get_by_id(group_ids=t_group_ids)
+        for counter in range(0, len(t_group_names)):
+            file.write(str(eval(t_group_names[counter].json())['name']) + " (" + str(eval(t_group_names[counter].json())['id'] * (-1)) + "), ")
+    else: file.write("нету")
     file.close()
     await upload_and_edit_message_in_file(message, file_name)
 
