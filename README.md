@@ -1,4 +1,4 @@
-<h1 align="center">VKB Message editor by command</h1>
+<h1 align="center">VKB Command Manager</h1>
 <p align="center">
     <img alt="Made with Python" src="https://img.shields.io/badge/Made%20with-Python-%23FFD242?logo=python&logoColor=white"></img>
 	<img alt="Python version" src="https://img.shields.io/badge/python-3.10-blue.svg"></img>
