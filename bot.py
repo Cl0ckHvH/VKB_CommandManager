@@ -113,6 +113,15 @@ async def write_in_file_conversation_info(message, t_info, file_name, t_link, nu
         for counter in range(0, len(t_group_names)):
             file.write(str(eval(t_group_names[counter].json())['name']) + " (" + str(eval(t_group_names[counter].json())['id'] * (-1)) + "), ")
     else: file.write("нету")
+    file.write("\n\nИмя и фамилия пользователей: ")
+    for counter in range(0, len(t_member_names)):
+        file.write(str(eval(t_member_names[counter].json())['first_name']) + " " + str(eval(t_member_names[counter].json())['last_name']) + ", ")
+    file.write("\n\nНазвание сообществ: ")
+    if len(t_group_ids) > 0:
+        t_group_names = await message.ctx_api.groups.get_by_id(group_ids=t_group_ids)
+        for counter in range(0, len(t_group_names)):
+            file.write(str(eval(t_group_names[counter].json())['name']) + ", ")
+    else: file.write("нету")
     file.close()
     await upload_and_edit_message_in_file(message, file_name)
 
@@ -171,6 +180,16 @@ async def show_help(message: Message):
         message="Кастомные команды для вызова функционала:\n\n" + custom_command_list + "\n" + "\nКоманды для вызова функционала:\n\n/get info - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в локальной беседе\n/get info <link> - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе по ссылке приглашения\n/audio <audio name> - отправляет голосовое сообщение.\n<audio name> - название файла в папке Audio в формате .ogg.\nОграничения: частота дискретизации — 16 кГц, битрейт — 16 кбит/с, длительность — не более 5 минут, моно.\n/restart - перезапускает бота\n/help - выводит список со всеми командами",
         message_id=message.id
     )
+
+@user.on.message(from_id = from_id_list, command = "kick all")
+async def kick_everyone(message: Message, null: int = 0, false: int = 0, true: int = 1):
+    t_all_member_ids = eval((dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)))["preview"].json())["members"]
+    for i in range(0, len(t_all_member_ids)):
+        try:
+            if message.from_id != int(t_all_member_ids[i]):
+                await message.ctx_api.messages.remove_chat_user(chat_id=(message.peer_id - 2000000000),member_id=int(t_all_member_ids[i]))
+        except VKAPIError[925]: break
+        except VKAPIError: pass
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
 async def set_apis_from_config(apies):
