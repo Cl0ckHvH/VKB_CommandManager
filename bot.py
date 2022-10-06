@@ -189,6 +189,11 @@ async def kick_everyone(message: Message, null: int = 0, false: int = 0, true: i
             if message.from_id != int(t_all_member_ids[i]):
                 await message.ctx_api.messages.remove_chat_user(chat_id=(message.peer_id - 2000000000),member_id=int(t_all_member_ids[i]))
         except VKAPIError[925]: break
+        except VKAPIError[15]:
+            try:
+                await message.ctx_api.request("messages.setMemberRole", {"peer_id":message.peer_id, "member_id":int(t_all_member_ids[i]), "role":"member"})
+                i -= 1
+            except: pass
         except VKAPIError: pass
 
 ################ Всё что ниже - настройка запуска и бота ############################################################
