@@ -20,8 +20,8 @@ with open("config.toml", "r", encoding="utf-8") as f:
     else:
         config = toml.load(f)
 
-with open("config_text.toml", "r", encoding="utf-8") as f:
-    config_text = toml.load(f)
+with open("custom_commands.toml", "r", encoding="utf-8") as f:
+    custom_commands = toml.load(f)
 
 user = User()
 
@@ -38,7 +38,7 @@ user.labeler.custom_rules["from_id"] = FromIdRule
 from_id_list = []
 command_list = []
 
-for i in config_text:
+for i in custom_commands:
     command_list.append("/" + i)
 
 ################ Всё что выше - первоначальная настройка ############################################################
@@ -49,9 +49,9 @@ async def edit_message(message: Message):
     try:
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
-            message=config_text[message.text[1:]]["text"],
+            message=custom_commands[message.text[1:]]["text"],
             keep_forward_messages=1,
-            attachment=config_text[message.text[1:]]["attachment"],
+            attachment=custom_commands[message.text[1:]]["attachment"],
             message_id=message.id
         )
     except VKAPIError[100]:
