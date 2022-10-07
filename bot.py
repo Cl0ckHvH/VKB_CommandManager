@@ -63,7 +63,7 @@ async def edit_message(message: Message):
         )
 
 # Опубликовывает файл на сервер и редактирует сообщение в файл
-async def upload_and_edit_message_in_file(message, file_name, null: int = 0, false: int = 0, true: int = 1):
+async def upload_and_edit_message_in_file(message, file_name, null = None):
     upload_server = dict(await message.ctx_api.docs.get_upload_server())["upload_url"]
     request = requests.post(upload_server, files={'file': open(file_name, 'rb')})
     uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title=file_name)).json()))
@@ -77,7 +77,7 @@ async def upload_and_edit_message_in_file(message, file_name, null: int = 0, fal
     os.remove(file_name)
 
 # Записывает инфу о чате в файл
-async def write_in_file_conversation_info(message, t_info, file_name, t_link, null: int = 0, false: int = 0, true: int = 1):
+async def write_in_file_conversation_info(message, t_info, file_name, t_link, null = None, true = True, false = False):
     file = open(file_name, "w", encoding="utf-8")
     t_all_member_ids = eval(t_info["preview"].json())["members"]
     t_member_ids = []
@@ -127,18 +127,18 @@ async def write_in_file_conversation_info(message, t_info, file_name, t_link, nu
 
 # Редактирует сообщение на txt файл, в котором находится инфа о беседе
 @user.on.chat_message(from_id = from_id_list, command = "get info")
-async def get_chat_info(message: Message, null: int = 0, false: int = 0, true: int = 1):
+async def get_chat_info(message: Message):
     try: invite_link = dict(await message.ctx_api.messages.get_invite_link(peer_id=message.peer_id))['link']
     except: invite_link = "нету"
     await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)), "chat_info.txt", invite_link)
 
 # Редактирует сообщение на txt файл, в котором находится инфа о беседе с ссылки
 @user.on.message(from_id = from_id_list, command = ("get info", 1))
-async def get_chat_info_by_link(message: Message, args: Tuple[str], none: int = 0, true: int = 1, null: int = 0, false: int = 0):
+async def get_chat_info_by_link(message: Message, args: Tuple[str]):
     await write_in_file_conversation_info(message, dict(await message.ctx_api.messages.get_chat_preview(link=args[0])), "chat_info.txt", args[0])
 
 @user.on.message(from_id = from_id_list, text = ("/audio <audio>"))
-async def audio_message(message: Message, audio: Optional[str] = None, null: int = 0, false: int = 0, true: int = 1):
+async def audio_message(message: Message, audio: Optional[str] = None, null = None):
     try: reply_message_id = dict(message.reply_message)['id']
     except: reply_message_id = None
     try:
@@ -172,17 +172,17 @@ async def restart_application(message: Message):
 @user.on.message(from_id = from_id_list, command = "help")
 async def show_help(message: Message):
     global command_list
-    custom_command_list = ""
+    t_command_list = ""
     for i in range(0, len(command_list)):
-        custom_command_list += command_list[i] + "\n"
+        t_command_list += command_list[i] + "\n"
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
-        message="Кастомные команды для вызова функционала:\n\n" + custom_command_list + "\n" + "\nКоманды для вызова функционала:\n\n/get info - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в локальной беседе\n/get info <link> - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе по ссылке приглашения\n/audio <audio name> - отправляет голосовое сообщение.\n<audio name> - название файла в папке Audio в формате .ogg.\nОграничения: частота дискретизации — 16 кГц, битрейт — 16 кбит/с, длительность — не более 5 минут, моно.\n/restart - перезапускает бота\n/help - выводит список со всеми командами",
+        message="Кастомные команды для вызова функционала:\n\n" + t_command_list + "\n" + "\nКоманды для вызова функционала:\n\n/get info - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в локальной беседе\n/get info <link> - редактирует сообщение на txt файл, в котором находится список всех ID пользователей и групп в беседе по ссылке приглашения\n/audio <audio name> - отправляет голосовое сообщение.\n<audio name> - название файла в папке Audio в формате .ogg.\nОграничения: частота дискретизации — 16 кГц, битрейт — 16 кбит/с, длительность — не более 5 минут, моно.\n/restart - перезапускает бота\n/kick all - кикает всех из беседы (при наличия админки)\n/help - выводит список со всеми командами",
         message_id=message.id
     )
 
-@user.on.message(from_id = from_id_list, command = "kick all")
-async def kick_everyone(message: Message, null: int = 0, false: int = 0, true: int = 1):
+@user.on.chat_message(from_id = from_id_list, command = "kick all")
+async def kick_everyone(message: Message, null = None, true = True):
     t_all_member_ids = eval((dict(await message.ctx_api.messages.get_chat_preview(peer_id=message.peer_id)))["preview"].json())["members"]
     for i in range(0, len(t_all_member_ids)):
         try:
@@ -196,15 +196,24 @@ async def kick_everyone(message: Message, null: int = 0, false: int = 0, true: i
             except: pass
         except VKAPIError: pass
 
+@user.on.message(from_id = from_id_list, command = ("get photos", 2))
+async def get_photos(message: Message, args: Tuple[str], null = None, false = False):
+    t_photo_list = eval((await message.ctx_api.photos.get(owner_id=args[0], album_id=args[1])).json())['items']
+    file = open("photo_list.txt", "w", encoding="utf-8")
+    file.write("Количество фотографий в альбоме: " + str(len(t_photo_list)) + "\n\nID фотографий: ")
+    for i in range(0, len(t_photo_list)):
+        file.write("\"photo" + str(args[0]) + "_" + str(t_photo_list[i]['id']) + "\", ")
+    file.close()
+    await upload_and_edit_message_in_file(message, "photo_list.txt")
+
 ################ Всё что ниже - настройка запуска и бота ############################################################
-async def set_apis_from_config(apies):
+async def set_apis_from_config(apies, false = False, true = True, null = None):
     global from_id_list
     for i in range(0, len(config["token"])):
         apies.append(API(config["token"][i]))
-        from_id_list.append(int(dict(await User(config["token"][i]).api.account.get_profile_info())['id']))
+        from_id_list.append(eval(((await User(config["token"][i]).api.users.get())[0]).json())['id'])
 
 if __name__ == "__main__":
     apies = []
-    set_token = asyncio.get_event_loop()
-    set_token.run_until_complete(set_apis_from_config(apies))
+    asyncio.get_event_loop().run_until_complete(set_apis_from_config(apies))
     run_multibot(user, apis=apies)
