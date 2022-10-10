@@ -62,7 +62,7 @@ async def upload_and_edit_message_in_file(message, file_name, null = None):
     uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title=file_name)).json()))
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
-        attachment='doc' + str(uploaded_document['doc']['owner_id']) + '_' + str(uploaded_document['doc']['id']),
+        attachment=f"doc{uploaded_document['doc']['owner_id']}_{uploaded_document['doc']['id']}",
         keep_forward_messages=1,
         message_id=message.id
     )
@@ -142,12 +142,12 @@ async def audio_message(message: Message, audio: Optional[str] = None, null = No
     except: reply_message_id = None
     try:
         upload_server = dict(await message.ctx_api.docs.get_messages_upload_server(type = 'audio_message', peer_id=message.peer_id))['upload_url']
-        request = requests.post(upload_server, files={'file': open(('Audio\\' + audio + '.ogg'), 'rb')})
-        uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title=(audio + '.ogg'))).json()))
+        request = requests.post(upload_server, files={'file': open((f"Audio\\{audio}.ogg"), 'rb')})
+        uploaded_document = eval(str((await message.ctx_api.docs.save(file=request.json()['file'], title=(f"{audio}.ogg"))).json()))
         await message.ctx_api.messages.send(
             random_id = 0,
             peer_id=message.peer_id,
-            attachment='doc' + str(uploaded_document['audio_message']['owner_id']) + '_' + str(uploaded_document['audio_message']['id']),
+            attachment=f"doc{uploaded_document['audio_message']['owner_id']}_{uploaded_document['audio_message']['id']}",
             reply_to=reply_message_id
         )
         await message.ctx_api.docs.delete(owner_id=uploaded_document['audio_message']['owner_id'], doc_id=uploaded_document['audio_message']['id'])
@@ -173,7 +173,7 @@ async def show_help(message: Message):
     global command_list
     t_command_list = ''
     for i in range(0, len(command_list)):
-        t_command_list += command_list[i] + '\n'
+        t_command_list += f"{command_list[i]}\n"
     await message.ctx_api.messages.edit(
         peer_id=message.peer_id,
         message=f"""Кастомные команды для вызова функционала:
@@ -184,7 +184,7 @@ async def show_help(message: Message):
         /audio <audio name> - отправляет голосовое сообщение. <audio name> - название файла в папке Audio в формате .ogg. Ограничения: частота дискретизации — 16 кГц, битрейт — 16 кбит/с, длительность — не более 5 минут, моно.
         /restart - перезапускает бота
         /kick all - кикает всех из беседы (при наличия админки)
-        /get photos <owner_id> <album_id> - получает список фотографий в виде текста "photo<owner_id>_<photo_id>. Используется для вставки в спам бот"
+        /get photos <owner_id> <album_id> - получает список фотографий в виде текста "photo<owner_id>_<photo_id>". Используется для вставки в спам бот"
         /help - выводит список со всеми командами""",
         message_id=message.id
     )
@@ -208,9 +208,9 @@ async def kick_everyone(message: Message, null = None, true = True):
 async def get_photos(message: Message, args: Tuple[str], null = None, false = False):
     t_photo_list = eval((await message.ctx_api.photos.get(owner_id=args[0], album_id=args[1])).json())['items']
     file = open('photo_list.txt', 'w', encoding='utf-8')
-    file.write('Количество фотографий в альбоме: ' + str(len(t_photo_list)) + '\n\nID фотографий: ')
+    file.write(f"Количество фотографий в альбоме: {len(t_photo_list)}\n\nID фотографий: ")
     for i in range(0, len(t_photo_list)):
-        file.write('\'photo' + str(args[0]) + '_' + str(t_photo_list[i]['id']) + '\', ')
+        file.write(f"\'photo{args[0]}_{t_photo_list[i]['id']}\', ")
     file.close()
     await upload_and_edit_message_in_file(message, 'photo_list.txt')
 
@@ -219,7 +219,7 @@ async def set_apis_from_config(apies = [], false = False, true = True, null = No
     global from_id_list
     for i in range(0, len(config['token'])):
         apies.append(API(config['token'][i]))
-        from_id_list.append(eval(((await User(config['token'][i]).api.users.get())[0]).json())['id'])
+        from_id_list.append(eval(((await API(config['token'][i]).users.get())[0]).json())['id'])
     return apies
 
 if __name__ == '__main__':
