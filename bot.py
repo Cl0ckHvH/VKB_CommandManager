@@ -12,16 +12,7 @@ from vkbottle.user import User, Message, run_multibot
 from vkbottle.tools.dev.mini_types.base import BaseMessageMin
 # Работа с конфигом: чтение из него
 with open('config.toml', 'r', encoding='utf-8') as f:
-    if 'token' in os.environ:
-        config = dict(os.environ)
-        for key, value in toml.load(f).items():
-            if key not in config:
-                config[key] = value
-    else:
-        config = toml.load(f)
-
-with open('custom_commands.toml', 'r', encoding='utf-8') as f:
-    custom_commands = toml.load(f)
+    config = toml.load(f)
 
 user = User()
 
@@ -38,20 +29,22 @@ user.labeler.custom_rules['from_id'] = FromIdRule
 from_id_list = []
 command_list = []
 
-for i in custom_commands:
-    command_list.append('/' + i)
+for i in config:
+    if type(config[i]) == dict:
+        command_list.append(f"{i}")
 
 ################ Всё что выше - первоначальная настройка ############################################################
 
 # Редактирует сообщение на то, что задал пользователь в конфиге
 @user.on.message(from_id = from_id_list, text = command_list)
 async def edit_message(message: Message):
+    custom_command = message.text
     try:
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
-            message=custom_commands[message.text[1:]]['text'],
+            message=config[custom_command]['text'],
             keep_forward_messages=1,
-            attachment=custom_commands[message.text[1:]]['attachment'],
+            attachment=config[custom_command]['attachment'],
             message_id=message.id
         )
     except VKAPIError[100]:
