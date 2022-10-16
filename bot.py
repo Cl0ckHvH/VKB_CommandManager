@@ -1,18 +1,16 @@
 import os
 import sys
-import toml
 import asyncio
 import requests
 
+from config import *
 from typing import Union, Tuple, Optional
 
 from vkbottle import API, VKAPIError
 from vkbottle.dispatch.rules import ABCRule
+from vkbottle.http import SingleAiohttpClient
 from vkbottle.user import User, Message, run_multibot
 from vkbottle.tools.dev.mini_types.base import BaseMessageMin
-# Работа с конфигом: чтение из него
-with open('config.toml', 'r', encoding='utf-8') as f:
-    config = toml.load(f)
 
 user = User()
 
@@ -29,9 +27,8 @@ user.labeler.custom_rules['from_id'] = FromIdRule
 from_id_list = []
 command_list = []
 
-for i in config:
-    if type(config[i]) == dict:
-        command_list.append(f"{i}")
+for i in custom_settings:
+    command_list.append(i)
 
 ################ Всё что выше - первоначальная настройка ############################################################
 
@@ -42,9 +39,9 @@ async def edit_message(message: Message):
     try:
         await message.ctx_api.messages.edit(
             peer_id=message.peer_id,
-            message=config[custom_command]['text'],
+            message=custom_settings[custom_command]['text'],
             keep_forward_messages=1,
-            attachment=config[custom_command]['attachment'],
+            attachment=custom_settings[custom_command]['attachment'],
             message_id=message.id
         )
     except VKAPIError[100]:
@@ -217,9 +214,12 @@ async def get_photos(message: Message, args: Tuple[str], null = None, false = Fa
 ################ Всё что ниже - настройка запуска и бота ############################################################
 async def set_apis_from_config(apies = [], false = False, true = True, null = None):
     global from_id_list
-    for i in range(0, len(config['token'])):
-        apies.append(API(config['token'][i]))
-        from_id_list.append(eval(((await API(config['token'][i]).users.get())[0]).json())['id'])
+    http = SingleAiohttpClient()
+    for i in range(0, len(token)):
+        apies.append(API(token[i]))
+        api = API(token=token[i], http_client=http)
+        from_id_list.append(eval(((await api.users.get())[0]).json())['id'])
+        await api.http_client.close()
     return apies
 
 if __name__ == '__main__':
