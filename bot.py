@@ -3,7 +3,8 @@ import sys
 import asyncio
 import requests
 
-from config import *
+from custom_libs.custom_cfg import custom_settings
+from config import token
 from typing import Union, Tuple, Optional
 
 from vkbottle import API, VKAPIError
