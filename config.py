@@ -1,22 +1,9 @@
-token = ['']
+from custom_libs.custom_cfg import Custom_commands
 
-custom_settings = {}
+token = [''] # Токен(ы) пользователя(ей)
 
-class Custom_commands:
-    def __init__(self,
-        command: str, # Команда для вызова. Обязательный параметр
-        attachment: str = None, # Вложение
-        text: str = None # Текст
-        ):
-
-        self.attachment = attachment
-        self.text = text
-        self.command = command
-
-        custom_settings.update({self.command: self.__dict__})
-        del custom_settings[self.command]['command']
-
-Custom_commands(
-    attachment='doc514714577_640721672',
-    command='gus'
-)
+Custom_commands( # Пример работы кастомной команды для редактирования текста
+    attachment='doc514714577_640721672', # Вложение. Необязательный параментр. Если не хотите иметь вложение, то эту строку можно просто удалить
+    text='', # Текст. Необязательный параментр. Если не хотите иметь текст, то эту строку можно просто удалить
+    command='gus' # Команда. Обязательный параметр. Писать в любом случае. Вызов происходит путём написания того, что написанно в command
+) # Если не будет ни вложения, ни текста, то сообщение редактируется на пустой символ
